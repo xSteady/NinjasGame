@@ -1,0 +1,10 @@
+﻿{% extends "index.html" %}
+
+{% block content %}
+<form action="/login/" method="get">
+	<p>{{ WORDS.2 }}: <input type="text" id="name" name="name" /></p>
+	<p>{{ WORDS.3 }}: <input type="password" id="psw" name="psw" /></p>
+	<p><a href="/registration/">{{ WORDS.0 }}</a></p>
+	<p><input type="submit" value="{{ WORDS.1 }}" /></p>
+ </form>
+{% endblock %}

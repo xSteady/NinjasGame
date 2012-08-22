@@ -1,0 +1,40 @@
+﻿{% extends "index_logedin.html" %}
+
+{% block content1 %}
+		<div style="position: fixed; top: 20px; left: 45px;  width: 30px; height: 27px; border: solid 2px {% if chrs.0.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.0.id }}">{{ chrs.0.name }}</a></div>
+		<div style="position: fixed; top: 20px; left: 85px;  width: 30px; height: 27px; border: solid 2px {% if chrs.1.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.1.id }}">{{ chrs.1.name }}</a></div>
+		<div style="position: fixed; top: 20px; left: 125px;  width: 30px; height: 27px; border: solid 2px {% if chrs.2.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.2.id }}">{{ chrs.2.name }}</a></div>
+		<div style="position: fixed; top: 20px; left: 165px;  width: 30px; height: 27px; border: solid 2px {% if chrs.3.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.3.id }}">{{ chrs.3.name }}</a></div>
+
+		<div style="position: fixed; top: 60px; left: 45px;  width: 30px; height: 27px; border: solid 2px {% if chrs.4.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.4.id }}">{{ chrs.4.name }}</a></div>
+		<div style="position: fixed; top: 60px; left: 85px;  width: 30px; height: 27px; border: solid 2px {% if chrs.5.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.5.id }}">{{ chrs.5.name }}</a></div>
+		<div style="position: fixed; top: 60px; left: 125px;  width: 30px; height: 27px; border: solid 2px {% if chrs.6.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.6.id }}">{{ chrs.6.name }}</a></div>
+		<div style="position: fixed; top: 60px; left: 165px;  width: 30px; height: 27px; border: solid 2px {% if chrs.7.fraction > -1 %}red{% else %}black{% endif %};"><a href="/?id={{ chrs.7.id }}">{{ chrs.7.name }}</a></div>
+		
+		<div style="position: fixed; top: 110px; left: 135px; font-size: 14px; color: red; font-weight: bold;">{{ selected_chr.name }}</div>
+		<img src='/imgs/ninja1.png' style="position: fixed; top: 130px; left: 130px; width: 110px; height: 109px;" />
+
+		<table style="position: fixed; top: 110; left: 5px; background-color: blue;">
+			<tr><td>{{ WORDS.11 }}</td><td>{{ selected_chr.level }}</td></tr>
+			<tr><td>{{ WORDS.20 }}</td><td>{{ selected_chr.exp }}</td></tr>
+			<tr><td>{{ WORDS.12 }}</td><td>{{ selected_chr.health }}</td></tr>
+			<tr><td>{{ WORDS.21 }}</td><td>{{ selected_chr.energy }}</td></tr>
+			<tr><td>{{ WORDS.13 }}</td><td>{{ selected_chr.strength }}</td></tr>
+			<tr><td>{{ WORDS.14 }}</td><td>{{ selected_chr.adroitness }}</td></tr>
+			<tr><td>{{ WORDS.22 }}</td><td>{{ selected_chr.endurance }}</td></tr>
+			<tr><td>{{ WORDS.23 }}</td><td>{{ selected_chr.luck }}</td></tr>
+			<tr><td>{{ WORDS.24 }}</td><td>{{ selected_chr.will }}</td></tr>
+			<tr><td>{{ WORDS.19 }}</td><td>{{ selected_chr.honour }}</td></tr>
+		</table>		
+		
+		<div style="position: fixed; top: 233px; left: 140px;  width: 20px; height: 20px; border: solid 1px black;"><img src='/imgs/item_bottle.png' width="19px" height="19px" />{{ slots.0.item_id }}</div>
+		<div style="position: fixed; top: 233px; left: 165px;  width: 20px; height: 20px; border: solid 1px black;">{{ slots.0.item_id }}</div>
+		<div style="position: fixed; top: 233px; left: 190px;  width: 20px; height: 20px; border: solid 1px black;">{{ slots.0.item_id }}</div>
+		
+		<a href="/field/" class="button_village_1">{{ WORDS.25 }} ></a>
+		
+		<a href="/profile/" class="button_main_0">{{ WORDS.31 }}</a>
+		<a href="/mail_list/" class="button_main_1">{{ WORDS.32 }}</a>
+		<a href="/missions/?id={{ selected_chr.id }}" class="button_main_2">{{ WORDS.33 }}</a>		
+		
+{% endblock %}

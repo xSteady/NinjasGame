@@ -1,0 +1,20 @@
+* { margin: 0; }
+
+html  { height: 100%; }
+
+body { font-family: tahoma, arial; font-size: 100%;  height: 100%; background-color: #B69065; }
+
+#d_menu { font-size: .7em; width: 100%; background-color: #DECFBB; padding-top: 2px; padding-bottom: 2px; margin-left: -1px; margin-right: -1px; text-align: center; }
+#hr_menu { border: solid 1px #9A8B77; margin-top: 3px; margin-bottom: 2px; height: 0px; }
+#d_main { margin: 0; width: 100%; padding-top: 5px; padding-left: 5px; }
+#d_bottom { width: 100%; margin-top: 5px; padding-top: 2px; padding-bottom: 2px; }
+
+#t_skills { font-size: .8em;}
+tr.tr_skills { background-color: #DECFBB; }
+
+img.character { border: solid 3px green; }
+
+a.button { text-decoration: none; color: blue; }
+
+h3.header { margin: 0; color: yellow; font-size: 16px; font-weight: bold; }
+h5.h_message { margin: 0; color: yellow; font-size: 12px; font-weight: bold; }

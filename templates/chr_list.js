@@ -1,0 +1,1 @@
+{"Chrs":[{% for c in chrs %}{"Id":{{c.id}},"Kind":{{c.kind}},"Name":{{c.name}}},{% endfor %}]}

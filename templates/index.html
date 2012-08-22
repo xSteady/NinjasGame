@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Ninjas :: {{ PAGE_NAME }}</title>
+	
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=240, initial-scale=1.0, maximum-scale=1.0; user-scalable=0" />
+	<meta http-equiv="content-type" content="application/xhtml+xml" />
+	
+	<link href="/styles/main.css" rel="stylesheet" type="text/css" />
+	
+	<script>
+		function change_width() {
+			if (document.body.scrollWidth > screen.width) {
+				var o = document.getElementsByName("div_canvas")[0];
+				o.style.width = screen.width*95/100;
+			}
+		}
+	</script>
+</head>
+<body style="width: 100%">
+	<div id="div_canvas" name="div_canvas" style="width: 100%; margin: 0; padding: 0;">
+		{% block content %}{% endblock %}
+	</div>
+</body>
+</html>	

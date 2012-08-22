@@ -1,0 +1,12 @@
+{% extends "index_logedin.html" %}
+
+{% block cnt_menu %}
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr>
+	<td width="33%" style="text-align: center; border-right: solid 1px #9A8B77; padding-top: 2px; padding-bottom: 2px; ">{% block menu_1_1 %}{% endblock %}</td>
+	<td width="33%" style="text-align: center; border-right: solid 1px #9A8B77; padding-top: 2px; padding-bottom: 2px; ">{% block menu_1_2 %}{% endblock %}</td>
+	<td width="33%" style="text-align: center; padding-top: 2px; padding-bottom: 2px; ">{% block menu_1_3 %}{% endblock %}</td>
+</tr>
+{% block menu_second_string %}{% endblock %}
+</table>
+{% endblock %}

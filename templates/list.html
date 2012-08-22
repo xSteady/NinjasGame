@@ -1,0 +1,20 @@
+﻿{% extends "tmpl_single_string_menu.html" %}
+
+{% block menu_1_1 %}
+<a href="/missions/?id={{ chr.id }}" class="button"><< {{ WORDS.51 }}</a>
+{% endblock %}
+
+{% block cnt_main %}
+<h3 class="header">{{ WORDS.50 }}</h3>
+<h5 class="h_message" style="color:{% if res_id == -1 %} red {% else %} {% if res_id == 1 %} green {% endif %} {% endif %}">{{ result }} </h5>
+<table id="t_skills">
+	{% for c in chrs %}
+	<tr class="tr_skills">
+		<td><a href="/fight/?id_from={{ chr.id }}&id_to={{ c.id }}">{{ WORDS.52 }}</a></td>
+		<td>{{ c.name }} {{ WORDS.55 }} {{ c.village_name }}</td>
+		<td>{{ WORDS.11 }}: {{ c.level }} </td>
+	</tr>
+	{% endfor %}
+</table>
+
+{% endblock %}

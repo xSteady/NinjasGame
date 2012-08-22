@@ -1,0 +1,60 @@
+﻿{% extends "tmpl_double_string_menu.html" %}
+
+{% block menu_1_3 %}<a href="/field/" class="button">{{ WORDS.25 }} >></a>{% endblock %}
+
+{% block menu_2_1 %}<a href="/profile/" class="button">{{ WORDS.31 }}</a>{% endblock %}
+{% block menu_2_2 %}<a href="/mail_list/" class="button">{{ WORDS.32 }}</a>{% endblock %}
+{% block menu_2_3 %}<a href="/missions/?id={{ selected_chr.id }}" class="button">{{ WORDS.33 }}</a>{% endblock %}
+
+{% block cnt_main %}
+			<div style="margin: 2px auto 2px auto; width: 100%; taxt-align: center;">
+				<h3>{{ user_profile.village_name }}</h3>
+				<table>
+					<tr>
+						<td style="text-align: center; border: solid 2px {% if chrs.0.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.0.fraction > -1 %}<a href="/?id={{ chrs.0.id }}"><img src='/imgs/head1{% if chrs.0.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.1.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.1.fraction > -1 %}<a href="/?id={{ chrs.1.id }}"><img src='/imgs/head2{% if chrs.1.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.2.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.2.fraction > -1 %}<a href="/?id={{ chrs.2.id }}"><img src='/imgs/head1{% if chrs.2.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.3.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.3.fraction > -1 %}<a href="/?id={{ chrs.3.id }}"><img src='/imgs/head2{% if chrs.3.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.4.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.4.fraction > -1 %}<a href="/?id={{ chrs.4.id }}"><img src='/imgs/head1{% if chrs.4.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.5.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.5.fraction > -1 %}<a href="/?id={{ chrs.5.id }}"><img src='/imgs/head2{% if chrs.5.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.6.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.6.fraction > -1 %}<a href="/?id={{ chrs.6.id }}"><img src='/imgs/head1{% if chrs.6.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+						<td style="border: solid 2px {% if chrs.7.fraction > -1 %}red{% else %}black{% endif %};">{% if chrs.7.fraction > -1 %}<a href="/?id={{ chrs.7.id }}"><img src='/imgs/head2{% if chrs.7.is_on_mission > 0 %}_bw{% endif %}.png' width='24px' height='33px' /></a>{% endif %}</td>
+					</tr>
+				</table>
+				<p><a href="/add_new_character/">{{ WORDS.59 }}</a></p>
+			</div>
+			<div style="margin: 2px auto 2px auto; width: 100%; ">
+			<table>
+				<tr><td colspan="2"><h3 id="h_name">{{ selected_chr.name }}</h3></td></tr>
+				<tr><td colspan="2"><h5 id="h_name">{% if selected_chr.is_on_mission > 0 %}{{ WORDS.57 }} - {{ selected_chr.mission_name }}{% if selected_chr.is_on_mission > 1 %} - <a href='/mission_end/?id={{ selected_chr.id }}'>{{ WORDS.60 }}</a>{% else %}{% if selected_chr.is_on_mission > 0 %} - {{ selected_chr.mission_time }}{% endif %}{% endif %}{% else %}{{ WORDS.56 }}{% endif %}</h5></td></tr>
+				<tr><td colspan="2"><a href='/char/?id={{ selected_chr.id }}'>{{ WORDS.61 }}</a></td></tr>
+				<tr><td valign="top">
+					<table id="t_skills">
+						<tr class="tr_skills"><td>{{ WORDS.11 }}</td><td>{{ selected_chr.level }}</td></tr>
+						<tr class="tr_skills"><td>{{ WORDS.20 }}</td><td>{{ selected_chr.exp }}</td></tr>
+						<tr class="tr_skills"><td>{{ WORDS.12 }}</td><td>{{ selected_chr.health }}</td></tr>
+						<tr class="tr_skills"><td>{{ WORDS.21 }}</td><td>{{ selected_chr.energy }}</td></tr>
+					</table>
+				</td>
+				<td valign="top">
+					<table>
+						<tr><td><img src='/imgs/ninja1.png' style="width: 110px; height: 109px;" /></td></tr>
+						<tr><td>
+							<table>
+								<tr>
+									<td style="border: solid 1px black;"><img src='/imgs/item_bottle.png' width="19px" height="19px" />{{ slots.0.item_id }}</td>
+									<td style="border: solid 1px black;">{{ slots.1.item_id }}</td>
+									<td style="border: solid 1px black;"></td>
+								</tr>
+							</table>
+						</td></tr>
+					</table>
+				</td>
+				</tr>
+				
+			</table>
+			</div>
+			
+
+
+{% endblock %}

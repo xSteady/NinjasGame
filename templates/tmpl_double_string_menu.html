@@ -1,0 +1,9 @@
+{% extends "tmpl_single_string_menu.html" %}
+
+{% block menu_second_string %}
+<tr>
+	<td width="33%" style="text-align: center; border-right: solid 1px #9A8B77; border-top: solid 1px #9A8B77; padding-top: 2px; padding-bottom: 2px; ">{% block menu_2_1 %}{% endblock %}</td>
+	<td width="33%" style="text-align: center; border-right: solid 1px #9A8B77; border-top: solid 1px #9A8B77; padding-top: 2px; padding-bottom: 2px; ">{% block menu_2_2 %}{% endblock %}</td>
+	<td style="text-align: center; padding-top: 2px; padding-bottom: 2px; border-top: solid 1px #9A8B77; ">{% block menu_2_3 %}{% endblock %}</td>
+</tr>
+{% endblock %}
