@@ -235,16 +235,35 @@ def place(request, type):
 	if (bld == None):
 		return render_to_response(bld_page, {'PAGE_NAME':PAGE_NAMES[1], 'WORDS':WORDS, 'bld':None, 'cnt':0, 'BG_FILE': 'bg_village.png'})
 	
-	old_cnt = bld.cnt
-	cnt = bld.recount()
+	# Сколько лежит на складе
+	cnt = 0
+	# Сколько произведено
+	increase = 0
+	# Сколько потеряно из-за переполнения склада
+	lost = 0
 	
-	if (old_cnt != cnt):
-		try:
-			bld.save()
-		except:
-			return render_to_response('error.js', {'ERROR_CODE':2,'ERROR_IDX':1})
+	if (bld.type_id == BuildingTypes.FIELD or bld.type_id == BuildingTypes.MINE):
+		user_profile = UserProfile.objects.get(pk=request.user)
+		# Результат увеличения товара
+		add_res = user_profile.add_to_store(bld)
 		
-	return render_to_response(bld_page, {'PAGE_NAME':PAGE_NAMES[1], 'WORDS':WORDS, 'bld':bld, 'cnt':cnt, 'BG_FILE': 'bg_village.png'})
+		return HttpResponse(add_res)
+		
+		if (add_res != None):
+			# TODO Обработка ошибки
+			user_profile.save()
+			bld.save()	# Сохраняется, что б изменилась дата последней проверки
+			
+			cnt = add_res['new']
+			increase = add_res['increase']
+			lost = add_res['lost']
+		else:
+			if (bld.type_id == BuildingTypes.FIELD):
+				cnt = user_profile.rice
+			elif (bld.type_id == BuildingTypes.MINE):
+				cnt = user_profile.metal
+		
+	return render_to_response(bld_page, {'PAGE_NAME':PAGE_NAMES[1], 'WORDS':WORDS, 'bld':bld, 'cnt':cnt, 'increase': increase,  'lost': lost, 'BG_FILE': 'bg_village.png'})
 
 # Строительство здания
 @login_required()

@@ -10,19 +10,70 @@ import datetime
 from datetime import timedelta
 from django.utils.timezone import utc
 
+import time
+
 import random
 
 # https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
 class UserProfile(models.Model):
 	user = models.OneToOneField(User, related_name="profile", primary_key=True)
 	
-	fraction=models.PositiveSmallIntegerField()
 	renewal=models.PositiveSmallIntegerField()	# Скорость восстановления энергии
+	village_name=models.CharField(max_length=100)
 	village_level=models.PositiveSmallIntegerField(default=0)
+	
+	store_level=PositiveTinyIntegerField(default=0)		# Уровень склада, по нему определяется, сколько ресурсов может храниться
+	
 	gold = models.PositiveIntegerField(default=0)
 	silver = models.PositiveIntegerField(default=0)
-	crystal = models.PositiveIntegerField(default=0)
-	village_name=models.CharField(max_length=100)
+	
+	rice=models.PositiveSmallIntegerField(default=0)	# Количество риса на складе
+	wood=models.PositiveSmallIntegerField(default=0)	# Дерево
+	stone=models.PositiveSmallIntegerField(default=0)	# Камень
+	coal=models.PositiveSmallIntegerField(default=0)	# Уголь
+	metal=models.PositiveSmallIntegerField(default=0)	# Метал
+	crystal=models.PositiveIntegerField(default=0)		# Кристалы
+	poison=models.PositiveIntegerField(default=0)		# яды
+	
+	
+	
+	# Добавление ресурса на склад. product - что добавляется, count - сколько добавлять
+	def add_to_store(self, building):
+		old_cnt = 0
+		cnt = 0
+		max = 0
+		lost = 0
+		if (building.type_id == BuildingTypes.FIELD):
+			max = STORE_MAXIMUMS[self.store_level]['rice']
+			old_cnt = self.rice
+			cnt = self.rice
+		elif (building.type_id == BuildingTypes.MINE):
+			max = STORE_MAXIMUMS[self.store_level]['metal']
+			old_cnt = self.metal
+			cnt = self.metal
+		else:
+			return None
+		
+		return building.recount()
+		increase = building.recount()
+		
+		
+		
+		if (increase > 0):
+			cnt = cnt + increase
+			if (cnt > max):
+				lost = cnt - max
+				cnt = max
+				
+			if (building.type_id == BuildingTypes.FIELD):
+				self.rice = cnt
+			elif (building.type_id == BuildingTypes.MINE):
+				self.metal = cnt
+		
+			return {'old': old_cnt, 'new': cnt, 'increase': increase, 'lost': lost }
+		
+		
+		return None
 			
 # Create your models here.
 class Character(models.Model):
@@ -167,19 +218,25 @@ class Building(models.Model):
 	cnt = models.PositiveSmallIntegerField(default=0)		# Количественный показатель, для каждого типа здания значит что то свое
 	last_check_out = models.DateTimeField(auto_now=True)	# Дата последнего пересчета количества ресурсов
 	
-	# Пересчет количества произведенных юнитов в здании
+	# С 2012-08-22 просто возвращает сколько сгенерило здание с момента последнего посещения # Пересчет количества произведенных юнитов в здании
 	def recount(self):
 		speed = BUILDING_PRODUCE_SPEED[self.type_id][self.level]
-		max = BUILDING_PRODUCE_MAXIMUMS[self.type_id][self.level]
+		#delta = (datetime.datetime.utcnow()-self.last_check_out.replace(tzinfo=None)).days*24*
+		now = datetime.datetime.utcnow()
+		dt = self.last_check_out.replace(tzinfo=None)
+		# Получение разницы в часах
+		return  Helper.date_diff(dt, now)/ 3600
 		
-		delta_hours = (datetime.datetime.utcnow()-self.last_check_out.replace(tzinfo=None)).seconds / 3600
+		#max = BUILDING_PRODUCE_MAXIMUMS[self.type_id][self.level]
 		
-		self.cnt = self.cnt + speed*delta_hours
+		#delta_hours = (datetime.datetime.utcnow()-self.last_check_out.replace(tzinfo=None)).seconds / 3600
 		
-		if (self.cnt > max):
-			self.cnt = max
+		#self.cnt = self.cnt + speed*delta_hours
 		
-		return self.cnt
+		#if (self.cnt > max):
+		#	self.cnt = max
+		
+		#return self.cnt
 
 class Fight(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True) 			# Дата создания боя
@@ -637,4 +694,9 @@ class Mail(models.Model):
 	from_chr_id = models.ForeignKey(Character, null=True)	# Если NULL - то от системы. 
 	created_at = models.DateTimeField(auto_now_add=True)
 	txt=models.CharField(max_length=2000)
-	
+
+# Класс с вспомогательными методами
+class Helper():
+	@staticmethod
+	def date_diff(first, second):
+		return int(time.mktime(second.timetuple()) - time.mktime(first.timetuple()))
