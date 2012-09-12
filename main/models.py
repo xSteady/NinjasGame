@@ -13,6 +13,7 @@ from django.utils.timezone import utc
 import time
 
 import random
+import ast
 
 # https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
 class UserProfile(models.Model):
@@ -35,45 +36,78 @@ class UserProfile(models.Model):
 	crystal=models.PositiveIntegerField(default=0)		# Кристалы
 	poison=models.PositiveIntegerField(default=0)		# яды
 	
-	
+	village_distribution=models.CharField(max_length=100) # Выбранное для этой деревни распределение ресурсов в деревне
+	mine_distribution=models.CharField(max_length=100) # Выбранное для этой деревни распределение ресурсов в шахте
 	
 	# Добавление ресурса на склад. product - что добавляется, count - сколько добавлять
 	def add_to_store(self, building):
-		old_cnt = 0
-		cnt = 0
-		max = 0
-		lost = 0
+		old_cnt = None  # Сколько есть сейчас на складе
+		cnt = {}		# Cколько стало на складе после добавления
+		max = STORE_MAXIMUMS[self.store_level]		# Какой максимум склада
+		lost = {}		# Сколько потеряно из-за переполнения склада
+		produced = {} 	# Сколько произведено каждого товара
+		
 		if (building.type_id == BuildingTypes.FIELD):
-			max = STORE_MAXIMUMS[self.store_level]['rice']
-			old_cnt = self.rice
-			cnt = self.rice
+			old_cnt = {"r":self.rice, "w": self.wood}
+			distribution = ast.literal_eval(self.village_distribution)
 		elif (building.type_id == BuildingTypes.MINE):
-			max = STORE_MAXIMUMS[self.store_level]['metal']
-			old_cnt = self.metal
-			cnt = self.metal
+			old_cnt = {"s":self.stone, "c":self.coal, "m":self.metal, "cr":self.crystal}
+			distribution = ast.literal_eval(self.mine_distribution)
 		else:
 			return None
 		
-		return building.recount()
+		# Просто инициализация словарей таким же словарем как и old_cnt, ниже в цикле наполняются значениями
+		#cnt = old_cnt
+		#lost = old_cnt
+		
 		increase = building.recount()
 		
+		# Здание ничего не произвело
+		if (increase == None):
+			return None
+
+		# Переменная для отладки
+		str_keys = "Produced: " + str(increase) + "<br />"
 		
+		# Прохождение по всем ключам текущих значений
+		for k in old_cnt:
+			# Сколько данного ресурса добылось, согласно распределению
+			value = increase * distribution[k] / distribution["base"]
+			# Сколько этого ресурса должно оказаться на складе
+			new_value = old_cnt[k] + value
+			# Сколько не влезло на склад
+			lost_cnt = new_value - max[k]
+			
+			if (lost_cnt > 0):
+				new_value = max[k]
+			else:
+				lost_cnt = 0
+			
+			str_keys += k + ": " + str(distribution[k]) + " # Got: " + str(value) + " # Old Value: " + str(old_cnt[k]) + " # New Value: " + str(new_value) + " # Limit: " + str(max[k]) + " # Lost: " + str(lost_cnt) + "<br />"
+			
+			cnt[k] = new_value	# Сколько стало этого товара на складе
+			lost[k] = lost_cnt	# Сколько утрачено из-за переполнения склада
+			produced[k] = value	# Сколько произведено этого товара
+			
+		#return str_keys
+		#return str(old_cnt) + "<br />" + str(cnt) + "<br />" + str(lost)
+
+		# Простановка необходимых значений
+		if (building.type_id == BuildingTypes.FIELD):
+			self.rice = cnt['r']
+			self.wood = cnt['w']
+		elif (building.type_id == BuildingTypes.MINE):
+			self.stone = cnt['s']
+			self.coal = cnt['c']
+			self.metal = cnt['m']
+			self.crystal = cnt['cr']
 		
-		if (increase > 0):
-			cnt = cnt + increase
-			if (cnt > max):
-				lost = cnt - max
-				cnt = max
-				
-			if (building.type_id == BuildingTypes.FIELD):
-				self.rice = cnt
-			elif (building.type_id == BuildingTypes.MINE):
-				self.metal = cnt
-		
-			return {'old': old_cnt, 'new': cnt, 'increase': increase, 'lost': lost }
-		
-		
-		return None
+		# old_store - товаров на складе до расчета прибавки
+		# new_store - товаров на складе после расчета прибавки
+		# increase - всего добыто ресурсов
+		# lost - потеряно ресурсов из-за переполнения склада
+		# produced - произведено каждого ресурса
+		return {'old_store': old_cnt, 'new_store': cnt, 'increase': increase, 'lost': lost, 'produced': produced }
 			
 # Create your models here.
 class Character(models.Model):
@@ -160,7 +194,8 @@ class Character(models.Model):
 		if (self.mission_id != None): #  and (self.mission_finish_dt != None or self.mission_finish_dt > datetime.datetime.now())
 			if (self.mission_finish_dt == None):
 				return 2 # персонаж на миссии и ее можно отменить (т.к. безссрочная, например Охрана деревни)
-			elif (self.mission_finish_dt.replace(tzinfo=None) > datetime.datetime.now().replace(tzinfo=None)):
+			#elif (self.mission_finish_dt.replace(tzinfo=None) > datetime.datetime.now().replace(tzinfo=None)):
+			elif (self.mission_finish_dt > datetime.datetime.now()):
 				return 1 # персонаж на миссии, у которой есть время окончания и ее нельзя отменить
 			else:
 				return 0 # У персонажа есть запись о прошедшей миссии
@@ -176,8 +211,10 @@ class Character(models.Model):
 		
 	@property
 	def mission_time(self):
-		now = datetime.datetime.now().replace(tzinfo=None)
-		dt = self.mission_finish_dt.replace(tzinfo=None)
+		#now = datetime.datetime.now().replace(tzinfo=None)
+		now = datetime.datetime.now()
+		#dt = self.mission_finish_dt.replace(tzinfo=None)
+		dt = self.mission_finish_dt
 		if (self.mission_finish_dt != None and dt > now):
 			dd = (dt - now)
 			sec = dd.days*86400 + dd.seconds
@@ -192,7 +229,7 @@ class Character(models.Model):
 	
 	@staticmethod
 	def create_new_char(user):
-		default_chr = BASE_CHARACTERS[0]
+		default_chr = BASE_CHARACTER
 		new_chr = Character(name=default_chr['name'], strength=default_chr['strength'], adroitness=default_chr['adroitness'], endurance=default_chr['endurance'], luck=default_chr['luck'], will=default_chr['will'], honour=default_chr['honour'], health=default_chr['health'], energy=default_chr['energy'], exp=default_chr['exp'], level=default_chr['level'], user=user, fraction=0)
 		
 		# TODO Обработка ошибки
@@ -216,27 +253,38 @@ class Building(models.Model):
 	type_id = PositiveTinyIntegerField(default=0)			# Тип здания 0-поле, 1-шахта, 2-библиотека
 	level = PositiveTinyIntegerField(default=0)				# Уровень здания
 	cnt = models.PositiveSmallIntegerField(default=0)		# Количественный показатель, для каждого типа здания значит что то свое
-	last_check_out = models.DateTimeField(auto_now=True)	# Дата последнего пересчета количества ресурсов
+	last_check_out = models.DateTimeField(auto_now_add=True)					# Дата последнего пересчета количества ресурсов
 	
-	# С 2012-08-22 просто возвращает сколько сгенерило здание с момента последнего посещения # Пересчет количества произведенных юнитов в здании
+	# С 2012-08-22 просто возвращает сколько сгенерило здание с момента последнего посещения 
+	# Устанавливает себе последнее время проверки генерации ресурсов
 	def recount(self):
 		speed = BUILDING_PRODUCE_SPEED[self.type_id][self.level]
-		#delta = (datetime.datetime.utcnow()-self.last_check_out.replace(tzinfo=None)).days*24*
-		now = datetime.datetime.utcnow()
-		dt = self.last_check_out.replace(tzinfo=None)
-		# Получение разницы в часах
-		return  Helper.date_diff(dt, now)/ 3600
 		
-		#max = BUILDING_PRODUCE_MAXIMUMS[self.type_id][self.level]
+		#now = datetime.datetime.utcnow()
+		now = datetime.datetime.now()
+		#dt = self.last_check_out.replace(tzinfo=None)
+		dt = self.last_check_out
 		
-		#delta_hours = (datetime.datetime.utcnow()-self.last_check_out.replace(tzinfo=None)).seconds / 3600
+		# Получение разницы в часах (получается без дробной части, т.к. date_diff возвращает INT)
+		hours =  Helper.date_diff(dt, now)/ 3600
 		
-		#self.cnt = self.cnt + speed*delta_hours
+		#hours = 2
+		# Количество полных циклов производства
+		production_steps = hours / speed[1]
 		
-		#if (self.cnt > max):
-		#	self.cnt = max
+		if (production_steps == 0):
+			return None
 		
-		#return self.cnt
+		produced = speed[0] * production_steps
+		
+		# Время последнего чекаута, учитывая, что шаг (production_step) может быть больше часа (но кратный часу) и целочисленное количество совершенных шагов может не попадать на текущее время
+		self.last_check_out = dt + timedelta(seconds=production_steps*speed[1]*3600)
+		
+		#return "hours=" + str(hours) + "<br />production_steps=" + str(production_steps) + "<br />production_steps * step=" + str(production_steps*speed[1]) + "<br/>last_check_out="  + str(dt) + "<br />new_check_out=" + str(dt + timedelta(seconds=production_steps*speed[1]*3600)) + "<br />now=" + str(now)
+		#return str(produced) + " " + str(speed[0]) + " " + str(hours) + " " + str(speed[1]) + " " + str(production_steps)
+		
+		# Возвращаем количество произведенных ресурсов
+		return produced
 
 class Fight(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True) 			# Дата создания боя
@@ -577,7 +625,7 @@ class Mission(models.Model):
 	
 	# Возвращение чара с миссии - закрывает миссию, накидывает нужные блага и сохраняет чара
 	def cancel(self, chr):
-		now = datetime.datetime.utcnow().replace(tzinfo=utc)
+		now = datetime.datetime.now() #.utcnow().replace(tzinfo=utc)
 		
 		self.finished_at = now
 		chr.mission_finish_dt = now
@@ -585,7 +633,8 @@ class Mission(models.Model):
 		arr = None
 		
 		if (self.type == MissionTypes.MEDITATION):
-			mins = (now - self.created_at.replace(tzinfo=utc)).seconds / 60
+			#mins = (now - self.created_at.replace(tzinfo=utc)).seconds / 60
+			mins = (now - self.created_at).seconds / 60
 			new_luck = chr.luck + mins*LUCK_INCREASE[chr.level][0]
 			
 			# Ограничение максимума удачи

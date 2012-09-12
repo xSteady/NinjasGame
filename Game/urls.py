@@ -29,7 +29,7 @@ urlpatterns = patterns('',
 	(r'^mission_start/$', mission_start),
 	(r'^mission_end/$', mission_end),
 	(r'^add_new_character/$', add_new_character),
-	(r'^test/', test_headers),
+	(r'^test/', test),
 	(r'^style_(\d{1,4})_(\d{1,4}).css$', get_style),
 	
 	(r'^$', start),

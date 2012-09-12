@@ -6,6 +6,9 @@ from django.http import QueryDict
 from main.models import *
 from django.db.models import Avg, Max, Min, Count, Sum
 
+import math
+import ast
+
 import settings
 from settings import BuildingTypes, SlotTypes, FigthStatuses, MissionTypes
 import dictionary
@@ -84,19 +87,32 @@ def registration(request):
 		#	return render_to_response('error.js', {'ERROR_CODE':1,'ERROR_IDX':2}) # Расса игрока не правильная
 		
 		# Дефолтный чар
-		default_chr = BASE_CHARACTERS[0] #BASE_CHARACTERS[int(fraction)]
+		default_chr = BASE_CHARACTER #BASE_CHARACTERS[int(fraction)]
+		
+		# Определение распределений ресурсов в деревне и в шахте
+		# Поскольку используется ф-ия floor при округлении, то вычитаю из длины массива 0.001, а не 1, так вероятности появления последнего возможного индекса примерно равна всем остальным
+		rnd_village = int(math.floor(random.uniform(0, len(VILLAGE_DISTRIBUTION) - 0.001)))
+		rnd_mine = int(math.floor(random.uniform(0, len(MINE_DISTRIBUTION) - 0.001)))
+		
+		# Как обратно преобразовывать строку в массив
+		# http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
+		#str_arr = str(VILLAGE_DISTRIBUTION[rnd_village])
+		#ast.literal_eval(str_arr)["base"]
 		
 		# Регистрация пользователя
 		user = User.objects.create_user(name, mail, psw)
-		profile = UserProfile(user=user, fraction=fraction, renewal=default_chr['renewal'], village_level=default_chr['village_level'], gold=default_chr['gold'], silver=default_chr['silver'], crystal=default_chr['crystal'], village_name=DEFAULT_VILLAGE_NAME + ' ' + name )
+		profile = UserProfile(user=user, renewal=default_chr['renewal'], village_name=DEFAULT_VILLAGE_NAME + ' ' + name, village_level=default_chr['village_level'], store_level=default_chr['store_level'], gold=default_chr['gold'], silver=default_chr['silver'], rice=default_chr['rice'], wood=default_chr['wood'], stone=default_chr['stone'], coal=default_chr['coal'], metal=default_chr['metal'], crystal=default_chr['crystal'], poison=default_chr['poison'], village_distribution=str(VILLAGE_DISTRIBUTION[rnd_village]), mine_distribution=str(MINE_DISTRIBUTION[rnd_mine]))
 
 		# Поле в деревне
 		field = Building(user=user, type_id=BuildingTypes.FIELD)
+		mine = Building(user=user, type_id=BuildingTypes.MINE)
 		
 		try:
+			#Сразу после регистрации лагает просчет ресурсов
 			user.save()
 			profile.save()
 			field.save()
+			mine.save()
 		except:
 			return render_to_response('error.js', {'ERROR_CODE':2,'ERROR_IDX':1})
 		
@@ -203,7 +219,7 @@ def place(request, type):
 	bld_page = ''
 	
 	if (type=='field'):
-		type_id = BuildingTypes.FIELD 		# Поле риса
+		type_id = BuildingTypes.FIELD 		# Деревня - производит рис и дерево
 		bld_page = 'field.html'
 	elif (type=='mine'):
 		type_id = BuildingTypes.MINE		# Шахта	
@@ -234,36 +250,37 @@ def place(request, type):
 	# Если здания еще нет
 	if (bld == None):
 		return render_to_response(bld_page, {'PAGE_NAME':PAGE_NAMES[1], 'WORDS':WORDS, 'bld':None, 'cnt':0, 'BG_FILE': 'bg_village.png'})
-	
-	# Сколько лежит на складе
-	cnt = 0
-	# Сколько произведено
-	increase = 0
-	# Сколько потеряно из-за переполнения склада
-	lost = 0
+
+	store_cnt = None  # Сколько лежит на складе ресурсов для данного здания
+	store_max = None  # Сколько может лежать на складе ресурсов для данного здания		
+	increase = None # Сколько произведено
+	lost = None # Сколько потеряно из-за переполнения склада
 	
 	if (bld.type_id == BuildingTypes.FIELD or bld.type_id == BuildingTypes.MINE):
 		user_profile = UserProfile.objects.get(pk=request.user)
 		# Результат увеличения товара
 		add_res = user_profile.add_to_store(bld)
 		
-		return HttpResponse(add_res)
-		
+		#return HttpResponse(add_res)
+		cnt = ""
+		produced = ""
+		lost = ""
 		if (add_res != None):
 			# TODO Обработка ошибки
 			user_profile.save()
+
 			bld.save()	# Сохраняется, что б изменилась дата последней проверки
 			
-			cnt = add_res['new']
-			increase = add_res['increase']
-			lost = add_res['lost']
+			cnt = str(add_res['new_store'])
+			produced = str(add_res['produced'])
+			lost = str(add_res['lost'])
 		else:
 			if (bld.type_id == BuildingTypes.FIELD):
 				cnt = user_profile.rice
 			elif (bld.type_id == BuildingTypes.MINE):
 				cnt = user_profile.metal
 		
-	return render_to_response(bld_page, {'PAGE_NAME':PAGE_NAMES[1], 'WORDS':WORDS, 'bld':bld, 'cnt':cnt, 'increase': increase,  'lost': lost, 'BG_FILE': 'bg_village.png'})
+	return render_to_response(bld_page, {'PAGE_NAME':PAGE_NAMES[1], 'WORDS':WORDS, 'bld':bld, 'cnt':cnt, 'produced': produced,  'lost': lost, 'BG_FILE': 'bg_village.png'})
 
 # Строительство здания
 @login_required()
@@ -708,6 +725,32 @@ def mission_end(request):
 			show_buttons = True
 	
 	return render_to_response('mission_end.html', {'PAGE_NAME':PAGE_NAMES[6], 'WORDS':WORDS, 'chr_id':chr.id, 'type': type, 'BG_FILE': 'bg_village.png', 'message':message, 'show_buttons': show_buttons})
+
+def test(request):
+
+
+	chr = Character.objects.get(pk=0)
+	strr = str(chr.mission_finish_dt)
+	dt_now = datetime.datetime.now()
+	strr += "<br />" + str(dt_now)
+	# Получение разницы в часах (получается без дробной части, т.к. date_diff возвращает INT)
+	hours =  Helper.date_diff(chr.mission_finish_dt, dt_now)/ 3600
+	strr += "<br />" + str(hours)
+	delta = dt_now - chr.mission_finish_dt
+	strr += "<br />" + str(delta)
+	return HttpResponse(strr)
+
+	chr.mission_finish_dt=dt_now
+	chr.save()
+	strr += "<br />" + str(chr.mission_finish_dt)
+	
+	chr = Character.objects.get(pk=0)
+	strr += "<br />" + str(chr.mission_finish_dt)
+	return HttpResponse(strr)
+	rnd_village = int(math.floor(random.uniform(0, len(VILLAGE_DISTRIBUTION) - 0.001)))
+	str_arr = str(VILLAGE_DISTRIBUTION[rnd_village])
+	
+	return HttpResponse(ast.literal_eval(str_arr)["base"])
 	
 def test_headers(request):
 	qd = request.META
@@ -720,3 +763,4 @@ def test_headers(request):
 	
 def get_style(request, width, height):
 	return HttpResponse("div.test { width: " + width + "px; height: " + height + " x; background-color: #ff0000; }")
+	
